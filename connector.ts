@@ -74,7 +74,7 @@ let main = async () => {
     let resourceClient = new azureResource.ResourceManagementClient(credentials, subscriptionId);
     let k8sApi = config.Config.defaultClient();
 
-    node.Update(k8sApi, keepRunning);
+    node.Update(k8sApi, resourceClient, keepRunning);
     creator.ContainerCreator(k8sApi, new Date(), resourceClient, keepRunning);
     deleter.ContainerDeleter(k8sApi, resourceClient, keepRunning);
     synchronizer.Synchronize(k8sApi, new Date(), resourceClient, resourceGroup, region, keepRunning);
