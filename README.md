@@ -26,12 +26,12 @@ Once the connector is registered as a node named `aci-connector`, you can use `n
 In addition to the provided examples directory, the following Kubernetes features are currently supported when defined within a Kubernetes Pod manifest. This list is subject to change as we improve the aci-connector.
 * Environment Variables
 * Commands
+* ImagePullSecrets
 
 ## Limitations
 The following Kubernetes features are not currently supported as part of the aci-connector.
 * ConfigMaps
 * Secrets
-* ImagePullSecrets
 * ServiceAccounts
 * Volumes
 * kubectl logs
