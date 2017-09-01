@@ -17,8 +17,12 @@ export async function ContainerCreator(client: api.Core_v1Api, startDate: Date, 
                 continue;
             }
             let exists = true;
+            let existingPod: api.V1Pod = null;
             try {
-                let pod = await client.readNamespacedPod(containerGroup['name'], "default");
+                let response = await client.readNamespacedPod(containerGroup['name'], "default");
+                if (response && response.body) {
+                    existingPod = response.body as api.V1Pod;
+                }
             } catch (Exception) {
 	        // TODO: look for 404 here?
                 console.log(Exception);
@@ -80,6 +84,11 @@ export async function ContainerCreator(client: api.Core_v1Api, startDate: Date, 
             }
             pod.spec.containers = containers;
             pod.status.containerStatuses = containerStatuses;
+
+            if (existingPod) {
+                pod.metadata = existingPod.metadata
+            }
+
             try {
                 if (!exists) {
                     await client.createNamespacedPod("default", pod);
