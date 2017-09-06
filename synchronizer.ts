@@ -2,6 +2,29 @@ import api = require('@kubernetes/typescript-node');
 import aci = require('./aci');
 import azureResource = require('azure-arm-resource');
 
+
+export class FileStorageSecret {
+    storageAccountName;
+    storageAccountKey;
+}
+
+export async function GetFileStorageSecrets(client: api.Core_v1Api, secretName: string, pod: api.V1Namespace): Promise<FileStorageSecret> {
+    let promise = new Promise<FileStorageSecret>(async (resolve, reject) => {
+        try {
+            let response = await client.readNamespacedSecret(secretName, pod.metadata.namespace);
+            let responseBody = response.body as api.V1Secret;
+            let fsSecret = {
+                storageAccountName: Buffer.from(responseBody.data['storageAccountName'], 'base64').toString('ascii'),
+                storageAccountKey: Buffer.from(responseBody.data['storageAccountKey'], 'base64').toString()
+            } as FileStorageSecret;
+            resolve(fsSecret);
+         } catch (Exception) {
+            reject(Exception);
+         }
+     });
+     return promise;
+}
+
 export async function Synchronize(client: api.Core_v1Api, startTime: Date, rsrcClient: azureResource.ResourceManagementClient, resourceGroup: string, region: string, keepRunning: () => boolean) {
     console.log('container scheduler');
     try {
@@ -52,6 +75,7 @@ export async function Synchronize(client: api.Core_v1Api, startTime: Date, rsrcC
             }
             for (let container of pod.spec.containers) {
                 let ports = new Array<Object>();
+                let volumeMounts = new Array<Object>();
                 let envs = new Array<Object>();
                 let commands = new Array<String>();
                 if (container.ports) {
@@ -88,6 +112,19 @@ export async function Synchronize(client: api.Core_v1Api, startTime: Date, rsrcC
                         commands.push(command)
                     }
                 }
+                if (container.volumeMounts) {
+                    let defVolumePattern = /default-token/gi;
+                    for (let volumeMount of container.volumeMounts) {
+                        // Note: Kubernetes attaches a default token volume. Ignore that one for now.
+                        if (volumeMount.name.search(defVolumePattern) == -1) {
+                            volumeMounts.push({
+                                name: volumeMount.name,
+                                mountPath: volumeMount.mountPath
+                            })
+                        }
+                    }
+                }
+
                 containers.push(
                     {
                         name: container.name,
@@ -100,17 +137,34 @@ export async function Synchronize(client: api.Core_v1Api, startTime: Date, rsrcC
                                     memoryInGB: 1.5
                                 }
                             },
+                            volumeMounts: volumeMounts,
                             command: commands,
                             environmentVariables: envs
                         }
                     }
                 );
+
+            }
+            let volumes = new Array<Object>();
+            for (let volume of pod.spec.volumes) {
+                if (volume.azureFile != null) {
+                    let fsSecret = await GetFileStorageSecrets(client, volume.azureFile.secretName, pod);
+                    volumes.push({
+                        name: volume.name,
+                        azureFile: {
+                            shareName: volume.azureFile.shareName,
+                            storageAccountName: fsSecret['storageAccountName'],
+                            storageAccountKey: fsSecret['storageAccountKey']
+                        }
+                    });
+                }
             }
             let group = {
                 properties: {
                     osType: "linux",
                     containers: containers,
                     imageRegistryCredentials: imageRegistryCredentials,
+                    volumes: volumes,
                     ipAddress: {
                         // TODO: use a tag to make Public IP optional.
                         type: "Public",
