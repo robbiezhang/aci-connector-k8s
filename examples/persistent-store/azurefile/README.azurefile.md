@@ -69,12 +69,15 @@ how to create an busybox image which watches the mounted azure file share.
 ## Sample run
 Here is the sample output from a container created using the files from the samples. We can run:
 ```
-az container logs --name <container name> --resource-name <resource name>
+az container logs --name <container name> --resource-group <resource name>
 ```
 
-get the logs from the console.
+get the logs from the console. Here is part of the the logs from the container
 
 ```
+Every 2s: ls /mnt/aci                                       
 
+test1
+test2
 
 ```
