@@ -1,0 +1,8 @@
+.git
+README.md
+Dockerfile
+examples
+gifs
+charts
+node_modules
+*.js
