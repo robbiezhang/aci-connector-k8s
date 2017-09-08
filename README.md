@@ -22,6 +22,21 @@ Once the connector is registered as a node named `aci-connector`, you can use `n
  1. A working `az` command-line client - [Install azure cli](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli) 
  2. A Kubernetes cluster with a working `kubectl` - [Set up a Kubernetes cluster on Azure](https://docs.microsoft.com/en-us/azure/container-service/kubernetes/container-service-kubernetes-walkthrough)
 
+## Current Features
+In addition to the provided examples directory, the following Kubernetes features are currently supported when defined within a Kubernetes Pod manifest. This list is subject to change as we improve the aci-connector.
+* Environment Variables
+* Commands
+* ImagePullSecrets
+
+## Limitations
+The following Kubernetes features are not currently supported as part of the aci-connector.
+* ConfigMaps
+* Secrets
+* ServiceAccounts
+* Volumes
+* kubectl logs
+* kubectl exec
+
 ## Quickstart
 
 1. Edit `examples/aci-connector.yaml` and supply environment variables
@@ -114,6 +129,22 @@ k8s-agentpool1-31868821-2   Ready                      5d        v1.7.0
 k8s-master-31868821-0       Ready,SchedulingDisabled   5d        v1.7.0
 ```
 
+### Install the ACI Connector with Helm (optional)
+
+First, make sure to fill the values in the values.yaml file located in the /charts/aci-connector directory.
+
+You can then install the chart:
+
+```console
+$ helm install --name my-release ./charts/aci-connector
+```
+
+There's also the option to set the values from the command line. This will override any values in the values.yaml file:
+
+```console
+$ helm install --name my-release --set env.azureClientId=YOUR-AZURECLIENTID,env.azureClientKey=YOUR-AZURECLIENTKEY,env.azureTenantId=YOUR-AZURETENANTID,env.azureSubscriptionId=YOUR-AZURESUBSCRIPTIONID,env.aciResourceGroup=YOUR-ACIRESOURCEGROUP,env.aciRegion=YOUR-ACI-REGION ./charts/aci-connector
+```
+
 ### Install the NGINX example
 
 ```console
@@ -153,6 +184,15 @@ Note that if you have other nodes in your cluster then this Pod may not
 necessarily schedule onto the Azure Container Instances.
 
 To force a Pod onto Azure Container Instances, you can either explicitly specify the NodeName as in the first example, or you can delete all of the other nodes in your cluster using `kubectl delete nodes <node-name>`. A third option is to fill your cluster with other workloads, then the scheduler will be obligated to schedule work to the Azure Container Instance API.
+
+## Using Canary builds
+
+"Canary" builds are versions of the connector that are built periodically from the latest master branch. They are not official releases, and may not be stable. However, they offer the opportunity to test the cutting edge features.
+
+To use the latest canary release you can patch the aci-connector deployment to update the container tag using the following command:
+```console
+$ kubectl set image deploy/aci-connector aci-connector=microsoft/aci-connector-k8s:canary
+```
 
 ## Development Instructions
 
