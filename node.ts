@@ -1,6 +1,6 @@
 import api = require('@kubernetes/typescript-node');
-import providers = require('./providers');
 import azureResource = require('azure-arm-resource');
+import providers = require('./providers');
 
 let handleError = (err: Error) => {
     console.log('Error!');
@@ -15,34 +15,34 @@ async function getConditions(rsrcClient: azureResource.ResourceManagementClient,
         {
             lastHeartbeatTime: new Date(),
             lastTransitionTime: last,
-            message: "kubelet is posting ready",
-            reason: "KubeletReady",
-            status: "True",
-            type: "Ready"
+            message: 'kubelet is posting ready',
+            reason: 'KubeletReady',
+            status: 'True',
+            type: 'Ready'
         } as api.V1NodeCondition,
     );
     conditions.push(
         {
             lastHeartbeatTime: new Date(),
             lastTransitionTime: last,
-            message: "kubelet has sufficient disk space available",
-            reason: "KubeletHasSufficientDisk",
-            status: "False",
-            type: "OutOfDisk"
+            message: 'kubelet has sufficient disk space available',
+            reason: 'KubeletHasSufficientDisk',
+            status: 'False',
+            type: 'OutOfDisk'
         } as api.V1NodeCondition
     );
 
     if (!provider_registered) {
         let provider = await providers.getProvider(rsrcClient);
-        if (provider['registrationState'] != "Registered") {
+        if (provider['registrationState'] != 'Registered') {
             conditions.push(
                 {
                     lastHeartbeatTime: new Date(),
                     lastTransitionTime: last,
-                    message: "Microsoft.ContainerInstance not registered",
-                    reason: "ProviderRegistered",
-                    status: "False",
-                    type: "ProviderStatus"
+                    message: 'Microsoft.ContainerInstance not registered',
+                    reason: 'ProviderRegistered',
+                    status: 'False',
+                    type: 'ProviderStatus'
                 } as api.V1NodeCondition
             );
         } else {
@@ -54,7 +54,7 @@ async function getConditions(rsrcClient: azureResource.ResourceManagementClient,
 }
 
 let updateNode = async (name: string, rsrcClient: azureResource.ResourceManagementClient, transition: Date, client: api.Core_v1Api, keepRunning: () => boolean) => {
-    console.log("sending update.");
+    console.log('sending update.');
     try {
         if (!keepRunning()) {
 		return;
@@ -64,20 +64,17 @@ let updateNode = async (name: string, rsrcClient: azureResource.ResourceManageme
         node.metadata.resourceVersion = null;
         node.status = {
             nodeInfo: {
-                kubeletVersion: "v1.6.6",
+                kubeletVersion: 'v1.6.6',
                 architecture: "amd64"
             } as api.V1NodeSystemInfo,
             conditions: await getConditions(rsrcClient, transition),
             addresses: [] as Array<api.V1NodeAddress>
         } as api.V1NodeStatus;
-
         node.status.allocatable = {
             "cpu": "20",
             "memory": "100Gi",
             "pods": "20"
         };
-
-
         // TODO: Count quota here...
         node.status.capacity = node.status.allocatable;
 
@@ -85,7 +82,6 @@ let updateNode = async (name: string, rsrcClient: azureResource.ResourceManageme
     } catch (Exception) {
         console.log(Exception);
     }
-
     setTimeout(() => {
         updateNode(name, rsrcClient, transition, client, keepRunning);
     }, 5000);
@@ -105,7 +101,7 @@ export async function Update(client: api.Core_v1Api, rsrcClient: azureResource.R
         let status = {
             conditions: await getConditions(rsrcClient, transition),
             nodeInfo: {
-                kubeletVersion: "v1.6.6"
+                kubeletVersion: 'v1.6.6'
             } as api.V1NodeSystemInfo
         } as api.V1NodeStatus;
 
