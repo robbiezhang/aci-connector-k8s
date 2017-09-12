@@ -28,11 +28,22 @@ export async function ContainerCreator(client: api.Core_v1Api, startDate: Date, 
                 continue;
             }
 
+            let podPhase = null;
+            if ( containerGroup['properties']['provisioningState'] == 'Succeeded') {
+                podPhase = 'Running';
+            } else if ( containerGroup['properties']['provisioningState'] == 'Creating') {
+                podPhase = 'ContainerCreating';
+            } else if ( containerGroup['properties']['provisioningState'] == 'Failed') {
+                podPhase = 'Error';
+            } else {
+                podPhase = 'Unknown';
+            }
+
             if (!pod)
                 continue;
 
             pod.status.podIP = containerGroup['properties']['ipAddress'] ? containerGroup['properties']['ipAddress']['ip'] : null;
-            pod.status.phase = "Running";
+            pod.status.phase = podPhase;
             pod.status.startTime = startDate;
             pod.status.conditions = [
                 {
