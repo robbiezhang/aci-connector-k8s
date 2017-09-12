@@ -1,43 +1,73 @@
 import api = require('@kubernetes/typescript-node');
+import azureResource = require('azure-arm-resource');
+import providers = require('./providers');
 
 let handleError = (err: Error) => {
     console.log('Error!');
     console.log(err);
 };
 
-let updateNode = async (name: string, transition: Date, client: api.Core_v1Api, keepRunning: () => boolean) => {
-    console.log("sending update.");
+let provider_registered = false;
+
+async function getConditions(rsrcClient: azureResource.ResourceManagementClient, last: Date ){
+    let conditions = new Array<api.V1NodeCondition>();
+    conditions.push(
+        {
+            lastHeartbeatTime: new Date(),
+            lastTransitionTime: last,
+            message: 'kubelet is posting ready',
+            reason: 'KubeletReady',
+            status: 'True',
+            type: 'Ready'
+        } as api.V1NodeCondition,
+    );
+    conditions.push(
+        {
+            lastHeartbeatTime: new Date(),
+            lastTransitionTime: last,
+            message: 'kubelet has sufficient disk space available',
+            reason: 'KubeletHasSufficientDisk',
+            status: 'False',
+            type: 'OutOfDisk'
+        } as api.V1NodeCondition
+    );
+
+    if (!provider_registered) {
+        let provider = await providers.getProvider(rsrcClient);
+        if (provider['registrationState'] != 'Registered') {
+            conditions.push(
+                {
+                    lastHeartbeatTime: new Date(),
+                    lastTransitionTime: last,
+                    message: 'Microsoft.ContainerInstance not registered',
+                    reason: 'ProviderRegistered',
+                    status: 'False',
+                    type: 'ProviderStatus'
+                } as api.V1NodeCondition
+            );
+        } else {
+            // We will switch this flag once in a run..
+            provider_registered = true;
+        }
+    }
+    return conditions;
+}
+
+let updateNode = async (name: string, rsrcClient: azureResource.ResourceManagementClient, transition: Date, client: api.Core_v1Api, keepRunning: () => boolean) => {
+    console.log('sending update.');
     try {
         if (!keepRunning()) {
 		return;
 	}
         let result = await client.readNode(name);
         let node = result.body as api.V1Node;
-        let conditions = [
-            {
-                lastHeartbeatTime: new Date(),
-                lastTransitionTime: transition,
-                message: "kubelet is posting ready",
-                reason: "KubeletReady",
-                status: "True",
-                type: "Ready"
-            } as api.V1NodeCondition,
-            {
-                lastHeartbeatTime: new Date(),
-                lastTransitionTime: transition,
-                message: "kubelet has sufficient disk space available",
-                reason: "KubeletHasSufficientDisk",
-                status: "False",
-                type: "OutOfDisk"
-            } as api.V1NodeCondition
-        ] as Array<api.V1NodeCondition>;
         node.metadata.resourceVersion = null;
         node.status = {
             nodeInfo: {
-                kubeletVersion: "v1.6.6",
+                kubeletVersion: 'v1.6.6',
                 architecture: "amd64"
             } as api.V1NodeSystemInfo,
-            conditions: conditions,
+            conditions: await getConditions(rsrcClient, transition),
             addresses: [] as Array<api.V1NodeAddress>
         } as api.V1NodeStatus;
         node.status.allocatable = {
@@ -53,11 +83,11 @@ let updateNode = async (name: string, transition: Date, client: api.Core_v1Api, 
         console.log(Exception);
     }
     setTimeout(() => {
-        updateNode(name, transition, client, keepRunning);
+        updateNode(name, rsrcClient, transition, client, keepRunning);
     }, 5000);
 };
 
-export async function Update(client: api.Core_v1Api, keepRunning: () => boolean) {
+export async function Update(client: api.Core_v1Api, rsrcClient: azureResource.ResourceManagementClient, keepRunning: () => boolean) {
     try {
         let result = await client.listNode();
         let found = false;
@@ -69,28 +99,12 @@ export async function Update(client: api.Core_v1Api, keepRunning: () => boolean)
         }
         let transition = new Date();
         let status = {
-            conditions: [
-                {
-                    lastHeartbeatTime: new Date(),
-                    lastTransitionTime: transition,
-                    message: "kubelet is posting ready",
-                    reason: "KubeletReady",
-                    status: "True",
-                    type: "Ready"
-                } as api.V1NodeCondition,
-                {
-                    lastHeartbeatTime: new Date(),
-                    lastTransitionTime: transition,
-                    message: "kubelet has sufficient disk space available",
-                    reason: "KubeletHasSufficientDisk",
-                    status: "False",
-                    type: "OutOfDisk"
-                } as api.V1NodeCondition
-            ] as Array<api.V1NodeCondition>,
+            conditions: await getConditions(rsrcClient, transition),
             nodeInfo: {
-                kubeletVersion: "1.6.6"
+                kubeletVersion: 'v1.6.6'
             } as api.V1NodeSystemInfo
         } as api.V1NodeStatus;
+
         let node = {
             apiVersion: "v1",
             kind: "Node",
@@ -111,11 +125,10 @@ export async function Update(client: api.Core_v1Api, keepRunning: () => boolean)
             console.log('found aci-connector!');
         } else {
             console.log('creating aci-connector');
-
             await client.createNode(node);
         }
         setTimeout(() => {
-            updateNode(node.metadata.name, transition, client, keepRunning);
+            updateNode(node.metadata.name, rsrcClient, transition, client, keepRunning);
         }, 5000);
     } catch (Exception) {
         console.log(Exception);
