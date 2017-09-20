@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: busybox
+  namespace: default
+spec:
+  containers:
+  - image: <image repository location>
+    imagePullPolicy: Always
+    name: busybox
+    volumeMounts:
+     - name: acishare
+       mountPath: "/mnt/aci/"
+  dnsPolicy: ClusterFirst
+  nodeName: aci-connector
+  volumes:
+   - name: acishare
+     azureFile:
+       secretName: azurefilekey
+       shareName: < azure file share name>
+       readOnly: false
+  imagePullSecrets:
+  - name: <image pull secret>
