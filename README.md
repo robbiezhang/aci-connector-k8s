@@ -27,6 +27,7 @@ In addition to the provided examples directory, the following Kubernetes feature
 * Environment Variables
 * Commands
 * ImagePullSecrets
+* [Azure file share as volume](examples/persistent-store/azurefile/README.azurefile.md)
 
 ## Limitations
 The following Kubernetes features are not currently supported as part of the aci-connector.
