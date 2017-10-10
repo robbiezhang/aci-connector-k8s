@@ -16,12 +16,12 @@ spec:
         imagePullPolicy: Always
         env:
         - name: AZURE_CLIENT_ID
-          value: <required>
+          value: <CLIENT_ID>
         - name: AZURE_CLIENT_KEY
-          value: <required>
+          value: <CLIENT_KEY>
         - name: AZURE_TENANT_ID
-          value: <required>
+          value: <TENANT_ID>
         - name: AZURE_SUBSCRIPTION_ID
-          value: <required>
+          value: <SUBSCRIPTION_ID>
         - name: ACI_RESOURCE_GROUP
-          value: <required>
+          value: <RESOURCE_GROUP>
