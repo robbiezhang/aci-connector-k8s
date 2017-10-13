@@ -74,6 +74,19 @@ $ python3 generateManifest.py --resource-group <resource group> --location <loca
 Creating Service Principle
 ```
 
+### Confirm Microsoft.ContainerInstance provider is registered
+
+```console
+$ az provider list -o table | grep ContainerInstance
+Microsoft.ContainerInstance             NotRegistered
+```
+If it is not registered, register it by running the following command.
+```console
+$ az provider register -n Microsoft.ContainerInstance
+$ az provider list -o table | grep ContainerInstance
+Microsoft.ContainerInstance             Registered
+```
+
 ### Install the ACI Connector
 
 ```console
