@@ -67,7 +67,7 @@ def main():
         subprocess.check_output(
             "az ad sp create-for-rbac --role=Contributor --scopes /subscriptions/" + subscription_id + "/",
             shell=True
-        )
+        ).decode("utf-8")
     )
 
     try:
