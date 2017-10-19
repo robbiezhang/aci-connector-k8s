@@ -1,9 +1,11 @@
 import json
 import argparse
 import subprocess
+import os
 
 
 DEFAULT_LOCATION = "westus"
+BASE_CONFIG_FILE = "example-aci-connector.yaml"
 
 def main():
     """ Auto generate the yml file with the needed credentials"""
@@ -26,6 +28,9 @@ def main():
     parser.add_argument("-f", "--file", help="filename for the output file")
     
     args = parser.parse_args()
+
+    if not os.path.isfile(BASE_CONFIG_FILE):
+        print("Could not find base configuration file: ", BASE_CONFIG_FILE)
 
     resource_group = args.resource_group
 
@@ -82,7 +87,7 @@ def main():
         print("Unable to create a service principal")
         exit(-1)
 
-    with open('aci-connector.yaml', 'r') as file:
+    with open('example-aci-connector.yaml', 'r') as file:
         filedata = file.read()
 
     for key, value in replacements.items():
@@ -90,7 +95,7 @@ def main():
 
     filename = args.file
     if (filename == None):
-        filename = "generated-aci-connector.yaml"
+        filename = "aci-connector.yaml"
 
     with open(filename, 'w') as file:
         file.write(filedata)
