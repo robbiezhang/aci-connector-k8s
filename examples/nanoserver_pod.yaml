@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nanoserver
+  namespace: default
+spec:
+  containers:
+  - image: microsoft/nanoserver
+    imagePullPolicy: Always
+    name: nginx
+  dnsPolicy: ClusterFirst
+  nodeName: aci-connector-1

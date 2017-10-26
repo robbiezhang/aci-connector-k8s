@@ -73,8 +73,10 @@ let main = async () => {
 
     let resourceClient = new azureResource.ResourceManagementClient(credentials, subscriptionId);
     let k8sApi = config.Config.defaultClient();
+    var os[:string];
+    os = ["linux","windows"]
 
-    for (let os in ["linux", "windows"]) {
+    for (let entry of os) {
         node.Update(k8sApi, os, keepRunning);
         deleter.ContainerDeleter(k8sApi, resourceClient, os, keepRunning);
         synchronizer.Synchronize(k8sApi, new Date(), resourceClient, resourceGroup, region, os, keepRunning);
@@ -83,4 +85,3 @@ let main = async () => {
 }
 
 main();
-
