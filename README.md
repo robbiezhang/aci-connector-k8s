@@ -176,6 +176,14 @@ $ kubectl set image deploy/aci-connector aci-connector=microsoft/aci-connector-k
 
 Use the canary build specified above and you will see two connectors deployed as nodes on your Kubernetes cluster. Node select to aci-connector-0 for Linux ACI deployments and to aci-connector-1 for windows ACI deployments. 
 
+```console 
+$ kubectl get nodes
+NAME                        STATUS    AGE       VERSION
+aci-connector-0             Ready     8m        v1.6.6
+aci-connector-1             Ready     8m        v1.6.6
+k8s-mycluster1-10386372-0   Ready     8d        v1.7.7
+```
+
 ## Development Instructions
 
 ### Local Development
