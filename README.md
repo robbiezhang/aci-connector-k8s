@@ -28,6 +28,7 @@ In addition to the provided examples directory, the following Kubernetes feature
 * Commands
 * ImagePullSecrets
 * [Azure file share as volume](examples/persistent-store/azurefile/README.azurefile.md)
+* Windows ACI support through the microsoft/aci-connector-k8s:canary image
 
 ## Limitations
 The following Kubernetes features are not currently supported as part of the aci-connector.
@@ -171,6 +172,9 @@ To use the latest canary release you can patch the aci-connector deployment to u
 ```console
 $ kubectl set image deploy/aci-connector aci-connector=microsoft/aci-connector-k8s:canary
 ```
+### Windows Support 
+
+Use the canary build specified above and you will see two connectors deployed as nodes on your Kubernetes cluster. Node select to aci-connector-0 for Linux ACI deployments and to aci-connector-1 for windows ACI deployments. 
 
 ## Development Instructions
 
