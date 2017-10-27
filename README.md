@@ -91,7 +91,7 @@ Microsoft.ContainerInstance             Registered
 ### Install the ACI Connector
 
 ```console
-$ kubectl create -f examples/aci-connector.yaml 
+$ kubectl create -f examples/example-aci-connector.yaml 
 deployment "aci-connector" created
 
 $ kubectl get nodes -w
@@ -174,7 +174,7 @@ $ kubectl set image deploy/aci-connector aci-connector=microsoft/aci-connector-k
 ```
 ### Windows Support 
 
-Use the canary build specified above and you will see two connectors deployed as nodes on your Kubernetes cluster. Node select to aci-connector-0 for Linux ACI deployments and to aci-connector-1 for windows ACI deployments. 
+Use the canary build specified above and you will see two connectors deployed as nodes on your Kubernetes cluster. Node select to aci-connector-0 for Linux ACI deployments and to aci-connector-1 for Windows ACI deployments. 
 
 ```console 
 $ kubectl get nodes
