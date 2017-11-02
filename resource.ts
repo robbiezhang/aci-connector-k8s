@@ -1,9 +1,15 @@
 import azureResource = require('azure-arm-resource');
 import rest = require('ms-rest');
 
+let options = {
+    customHeaders: {
+        "User-Agent": "aci-connector-nodejs/0.1"
+    }
+}
+
 export async function getResource(client: azureResource.ResourceManagementClient, id: string, version: string): Promise<Object> {
     let promise = new Promise((resolve, reject) => {
-        client.resources.getById(id, version, function (err, result) {
+        client.resources.getById(id, version, options, function (err, result) {
             if (err) {
                 if ((err as rest.ServiceError).statusCode != 404) {
                     reject(err);
@@ -20,7 +26,7 @@ export async function getResource(client: azureResource.ResourceManagementClient
 
 export async function getMatchingResources(client: azureResource.ResourceManagementClient, type:string, version: string): Promise<Array<Object>> {
     let result = new Promise<Array<Object>>((resolve, reject) => {
-        client.resources.list(async function (err, result, request, response) {
+        client.resources.list(options, async function (err, result, request, response) {
             if (err) {
                 reject(err);
             } else {
@@ -48,7 +54,7 @@ export async function getMatchingResources(client: azureResource.ResourceManagem
 
 export function createResource(client: azureResource.ResourceManagementClient, group: string, namespace: string, type: string, name: string, params: Object, version: string) {
     let result = new Promise((resolve, reject) => {
-        client.resources.createOrUpdate(group, namespace, '', type, name, version, params, (err, result) => {
+        client.resources.createOrUpdate(group, namespace, '', type, name, version, params, options, (err, result) => {
             if (err) {
                 reject(err);
                 return;
